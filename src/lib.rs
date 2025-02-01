@@ -159,7 +159,9 @@ mod tests {
     use super::*;
     use proptest::collection::size_range;
     use proptest::prelude::*;
+    use std::fs::{read, write};
     use std::ptr;
+    extern crate cbindgen;
 
     // CRC-64/NVME
     //
@@ -391,5 +393,27 @@ mod tests {
 
             digest_free(handle);
         }
+    }
+
+    #[test]
+    fn test_crc64fast_nvme_bindings() -> Result<(), String> {
+        const BINDING: &str = "crc64fast_nvme.h";
+        let crate_dir = std::env::var("CARGO_MANIFEST_DIR").map_err(|error| error.to_string())?;
+
+        let mut expected = Vec::new();
+        cbindgen::generate(crate_dir)
+            .map_err(|error| error.to_string())?
+            .write(&mut expected);
+
+        let actual = read(BINDING).map_err(|error| error.to_string())?;
+
+        if expected != actual {
+            write(BINDING, expected).map_err(|error| error.to_string())?;
+            return Err(format!(
+                "{BINDING} is not up-to-date, commit the generated file and try again"
+            ));
+        }
+
+        Ok(())
     }
 }
