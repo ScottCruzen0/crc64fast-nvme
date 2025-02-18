@@ -34,7 +34,12 @@ fake-simd = []
 name = 'benchmark'
 harness = false
 
+# given that this is a performance library, we enable LTO by default, even in dev mode
+[profile.dev]
+lto = true
+
 [profile.release]
+lto = true # yields an +4-13% improvement in performance, depending on the workload
 strip = true
 
 [lib]
